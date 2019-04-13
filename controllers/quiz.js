@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize");
 const {models} = require("../models");
+const Op = Sequelize.Op;
 
 // Autoload el quiz asociado a :quizId
 exports.load = (req, res, next, quizId) => {
@@ -152,4 +153,29 @@ exports.check = (req, res, next) => {
         result,
         answer
     });
+};
+
+//GET /quizzes/randomplay
+exports.randomPlay = (req,res,next) => {
+    if(!req.session.randomPlay){
+        req.session.randomPlay = [];
+        req.session.score = 0;
+    }
+    models.quiz.findAll({
+        limit: 1,
+        [Op.notIn]: req.session.randomPlay
+    })
+        .then(quiz => {
+            score = req.session.score;
+            return res.render('/quizzes/random_play.ejs', {quiz,score} );
+        })
+        .catch(error => {
+            req.flash('error', 'Error asking next question: ' + error.message);
+            next(error);
+        });
+};
+
+//GET /quizzes/randomcheck/:quizId
+exports.randomCheck = (req, res, next) => {
+
 };
