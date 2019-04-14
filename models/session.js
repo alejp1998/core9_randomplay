@@ -13,12 +13,6 @@ module.exports = function (sequelize, DataTypes) {
             },
             data: {
                 type: DataTypes.STRING(50000)
-            }/*,
-            randomPlay: {
-                type: DataTypes.INTEGER
-            },
-            score: {
-                type: DataTypes.INTEGER
-            }*/
+            }
         });
 };

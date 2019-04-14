@@ -1,10 +1,15 @@
 const Sequelize = require("sequelize");
 const {models} = require("../models");
 const Op = Sequelize.Op;
+var ssn;
 
 // Autoload el quiz asociado a :quizId
 exports.load = (req, res, next, quizId) => {
-
+/*app.get('/',(req,res)=>{
+  ssn = req.session;
+  ssn.randomPlay;
+  ssn.score;
+});*/
     models.quiz.findByPk(quizId)
     .then(quiz => {
         if (quiz) {
@@ -20,7 +25,6 @@ exports.load = (req, res, next, quizId) => {
 
 // GET /quizzes
 exports.index = (req, res, next) => {
-
     models.quiz.findAll()
     .then(quizzes => {
         res.render('quizzes/index.ejs', {quizzes});
@@ -157,20 +161,18 @@ exports.check = (req, res, next) => {
 
 //GET /quizzes/randomplay
 exports.randomPlay = (req,res,next) => {
-    if(!req.session.randomPlay){
-        req.session.randomPlay = [];
-        req.session.score = 0;
+    ssn = req.session;
+    const score = ssn.score || 0;
+    if(score === 0){
+        ssn.randomPlay = [];
     }
-    const randomPlay = req.session.randomPlay;
-    const score = req.session.score;
-
-    models.quiz.findAll({
-        [Op.notIn]: randomPlay,
-        order: [Sequelize.fn( 'RANDOM' ),],
-        limit: 1
+    models.quiz.findOne({
+        where: {id: {[Op.notIn]: ssn.randomPlay}},
+        order: [Sequelize.fn( 'RANDOM' ),]
     })
         .then(quiz => {
             if(!quiz){
+                ssn.score = 0;
                 return res.render('quizzes/random_nomore.ejs', {score});
             }else{
                 return res.render('quizzes/random_play.ejs', {quiz,score} );
@@ -184,18 +186,18 @@ exports.randomPlay = (req,res,next) => {
 
 //GET /quizzes/randomcheck/:quizId
 exports.randomCheck = (req, res, next) => {
+    ssn = req.session;
     const answer = req.query.answer;
     const quiz = req.quiz;
-    let result;
+
+    let result = false;
 
     if(answer.toLowerCase().trim()===quiz.answer.toLowerCase().trim()){
         result = true;
-        req.session.score++;
-        req.session.randomPlay.push(quiz.id);
-    }else{
-        result = false;
+        ssn.score++;
+        ssn.randomPlay.push(quiz.id);
     }
 
-    const score = req.session.score;
+    const score = ssn.score;
     res.render('quizzes/random_result.ejs', {result,score,answer} );
 };
