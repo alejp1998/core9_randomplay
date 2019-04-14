@@ -161,13 +161,20 @@ exports.randomPlay = (req,res,next) => {
         req.session.randomPlay = [];
         req.session.score = 0;
     }
+    const randomPlay = req.session.randomPlay;
+    const score = req.session.score;
+
     models.quiz.findAll({
-        limit: 1,
-        [Op.notIn]: req.session.randomPlay
+        [Op.notIn]: randomPlay,
+        order: [Sequelize.fn( 'RANDOM' ),],
+        limit: 1
     })
         .then(quiz => {
-            score = req.session.score;
-            return res.render('/quizzes/random_play.ejs', {quiz,score} );
+            if(!quiz){
+                return res.render('quizzes/random_nomore.ejs', {score});
+            }else{
+                return res.render('quizzes/random_play.ejs', {quiz,score} );
+            }
         })
         .catch(error => {
             req.flash('error', 'Error asking next question: ' + error.message);
@@ -177,5 +184,18 @@ exports.randomPlay = (req,res,next) => {
 
 //GET /quizzes/randomcheck/:quizId
 exports.randomCheck = (req, res, next) => {
+    const answer = req.query.answer;
+    const quiz = req.quiz;
+    let result;
 
+    if(answer.toLowerCase().trim()===quiz.answer.toLowerCase().trim()){
+        result = true;
+        req.session.score++;
+        req.session.randomPlay.push(quiz.id);
+    }else{
+        result = false;
+    }
+
+    const score = req.session.score;
+    res.render('quizzes/random_result.ejs', {result,score,answer} );
 };

@@ -4,8 +4,9 @@
 <div>    Successful answers = <span id="score"><%= score %></span>
 </div>
 
-<form method="get" action="/quizzes/randomcheck/<%= quiz.id %>">
-    <p>        Question: <b><%= quiz.question %></b>
+<form method="get" action="/quizzes/randomcheck/<%= quiz.id || 1%>">
+    <p>
+        Question: <b><%= quiz.question %></b>
     </p>
 
     <div class="wideRow">
